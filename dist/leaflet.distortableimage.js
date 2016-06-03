@@ -424,7 +424,63 @@ L.DistortableImageOverlay = L.ImageOverlay.extend({
  	},
 
 	_updateCorner: function(corner, latlng) {
-		this._corners[corner] = latlng;
+		switch(this.options.disto_style)
+		{
+			case 'constrained':
+
+            			switch(corner)
+            			{
+                			case 0: // leave 3 unchanged
+                    				// adapt the lat of 1 and the lon of 2
+	                    			this._corners[1] = L.latLng(latlng.lat, this._corners[1].lng);
+        	            			this._corners[2] = L.latLng(this._corners[2].lat, latlng.lng);
+                	    			break;
+                			case 1: // leave 2 unchanged
+                    				// adapt the lat of 0 and the lon of 3
+                    				this._corners[0] = L.latLng(latlng.lat, this._corners[0].lng);
+	                    			this._corners[3] = L.latLng(this._corners[3].lat, latlng.lng);
+        	            			break;
+                			case 2: // leave 1 unchanged
+                    				// adapt the lat of 3 and the lon of 0
+                    				this._corners[3] = L.latLng(latlng.lat, this._corners[3].lng);
+                    				this._corners[0] = L.latLng(this._corners[0].lat, latlng.lng);
+	                    			break;
+        	        		case 3: // leave 0 unchanged
+                	    			// adapt the lat of 2 and the lon of 1
+                    				this._corners[2] = L.latLng(latlng.lat, this._corners[2].lng);
+                    				this._corners[1] = L.latLng(this._corners[1].lat, latlng.lng);
+                    				break;
+            			}
+
+            			this._corners[corner] = latlng;
+            			break;	
+
+        		case 'zoom_from_center':
+            			var slat = 0, slng = 0, dlat, dlng;
+            			
+            			for(var i=0; i<4; ++i)
+            			{
+                			slat += this._corners[i].lat;
+                			slng += this._corners[i].lng;
+            			}
+            			slat /= 4.0; slng /= 4.0;
+
+            			dlat = Math.abs(latlng.lat-slat)
+            			dlng = Math.abs(latlng.lng-slng)
+
+            			this._corners[0] = L.latLng(slat+dlat, slng-dlng);
+            			this._corners[1] = L.latLng(slat+dlat, slng+dlng);
+            			this._corners[2] = L.latLng(slat-dlat, slng-dlng);
+            			this._corners[3] = L.latLng(slat-dlat, slng+dlng);
+            			break;
+        
+        		case 'free':
+        		case 'default':
+            			this._corners[corner] = latlng;
+            			break;
+        		default:
+            			this._corners[corner] = latlng;
+    		}
 		this._reset();
 	},
 
